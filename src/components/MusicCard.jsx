@@ -2,22 +2,23 @@ import { Card, CardContent, Typography, CardMedia, Button, Modal, Box, TextField
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
+import { deleteSong, updateSong } from '../services/api';
 
-export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, is_admin, onDelete }) {
+export default function MusicCard({ id, rank, title, views, thumb, youtube_id, is_admin, onDelete }) {
   const [open, setOpen] = useState(false);
-  const [titleEdit, setTitleEdit] = useState(titulo);
+  const [titleEdit, setTitleEdit] = useState(title);
+  const [viewsEdit, setViewsEdit] = useState(views);
+  const [thumbEdit, setThumbEdit] = useState(thumb);
+  const [youtubeIdEdit, setYoutubeIdEdit] = useState(youtube_id);
   const [cardsVisible, setCardsVisible] = useState(true);
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`/api/songs/${id}`, {
-        method: 'DELETE',
-      });
-  
-      if (res.ok) {
+      const res = await deleteSong(id);
+      if (res.status === 'success') {
         setCardsVisible(false);
         if (typeof onDelete === 'function') {
-          onDelete(); // <-- isso aqui vai ativar o mock no teste!
+          onDelete(); 
         }
       }
     } catch (err) {
@@ -27,17 +28,10 @@ export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, 
 
   const handleEdit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await fetch(`/api/songs/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo: titleEdit }),
-      });
-
-      if (res.ok) {
+      const res = await updateSong(id, titleEdit, views, youtube_id, thumb);
+      if (res.status === 'success') {
         setOpen(false);
-        // pode disparar algo pra atualizar a UI externa, se precisar
       }
     } catch (err) {
       console.error('Erro ao editar:', err);
@@ -45,6 +39,15 @@ export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, 
   };
 
   if (!cardsVisible) return null;
+
+  function formatViews(views) {
+    if (views >= 1_000_000) {
+      return (views / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    } else if (views >= 1_000) {
+      return (views / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return views.toString();
+  }
 
   return (
     <>
@@ -59,10 +62,10 @@ export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, 
           <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <CardContent>
               <Typography variant="h6">
-                #{rank} - {titulo}
+                {rank} - {title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {views.toLocaleString()} visualizações
+                {formatViews(Number(views))} visualizações
               </Typography>
 
               {is_admin && (
@@ -101,7 +104,7 @@ export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, 
             component="img"
             sx={{ width: 120 }}
             image={thumb}
-            alt={`Thumbnail de ${titulo}`}
+            alt={`Thumbnail de ${title}`}
           />
         </Card>
       </a>
@@ -128,6 +131,27 @@ export default function MusicCard({ id, rank, titulo, views, thumb, youtube_id, 
               label="Título"
               value={titleEdit}
               onChange={(e) => setTitleEdit(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Visualizações"
+              value={viewsEdit}
+              onChange={(e) => setViewsEdit(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Link da Thumb"
+              value={thumbEdit}
+              onChange={(e) => setThumbEdit(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Id do Youtube"
+              value={youtubeIdEdit}
+              onChange={(e) => setYoutubeIdEdit(e.target.value)}
               sx={{ mb: 2 }}
             />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
