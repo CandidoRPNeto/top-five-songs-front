@@ -6,7 +6,7 @@ body {
     background: #f5f5f5;
 }
 
-header {
+.header {
     position: relative;
     color: white;
     text-align: center;
@@ -17,7 +17,7 @@ header {
 }
 
 /* Overlay gradiente sobre a imagem de fundo */
-header::before {
+.header::before {
     content: '';
     position: absolute;
     top: 0;
