@@ -77,7 +77,75 @@ export const sendRequest = async () => {
       throw error;
     }
   };
-  
+
+export const getRequestList = async () => {
+  const token = getCookieValue('token'); 
+    try {
+      if(token == null) throw new Error('need login');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Erro no deleteSong:', error);
+      throw error;
+    }
+  };
+
+export const acceptRequest = async () => {
+  const token = getCookieValue('token'); 
+    try {
+      if(token == null) throw new Error('need login');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Erro no deleteSong:', error);
+      throw error;
+    }
+  };
+
+export const refuseRequest = async () => {
+  const token = getCookieValue('token'); 
+    try {
+      if(token == null) throw new Error('need login');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Erro no deleteSong:', error);
+      throw error;
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
+
 function getCookieValue(name) {
   const cookies = document.cookie.split('; ');
   const cookie = cookies.find(c => c.startsWith(name + '='));
