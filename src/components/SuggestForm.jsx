@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   TextField,
@@ -13,33 +13,55 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { sendRequest } from '../services/api';
+import { sendRequest, createSong, getRequestList, acceptRequest, refuseRequest } from '../services/api';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function SuggestForm({ is_admin }) {
   const [url, setUrl] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const mockRequests = [
-    { id: 1, link: 'https://youtube.com/watch?v=abc123' },
-    { id: 2, link: 'https://youtube.com/watch?v=xyz789' },
-  ];
+  const [requests, setRequests] = useState([]);
+  const [total, setTotal] = useState();
+  const [requestPage, setRequestPage] = useState();
+  
+  useEffect(() => {
+    getRequestList(1).then((data) => {
+      setRequests(data.data);
+      setTotal(data.total);
+      setRequestPage(1);
+    });
+  }, []);
+    
+  function handleVerMais() {
+    const newPage = requestPage + 1;
+    console.log(newPage);
+    getRequestList(newPage).then((data) => {
+      setRequests(prev => [...prev, ...data.data]);
+      setRequestPage(newPage);
+    });
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await sendRequest(url);
+    let res;
+    if (is_admin) {
+      res = await createSong(url);
+    } else {
+      res = await sendRequest(url);
+    }
     setFeedback(res.message);
     setUrl('');
+    window.location.reload();
   };
 
-  const handleAccept = (id) => {
-    console.log(`Aprovado: ${id}`);
-    // Aqui vai a lógica de aprovação
+  const handleAccept = async (id) => {
+    await acceptRequest(id);
+    window.location.reload();
   };
 
-  const handleReject = (id) => {
-    console.log(`Recusado: ${id}`);
-    // Aqui vai a lógica de rejeição
+  const handleReject = async (id) => {
+    await refuseRequest(id);
+    window.location.reload();
   };
 
   return (
@@ -78,7 +100,6 @@ export default function SuggestForm({ is_admin }) {
         </Box>
       </Box>
 
-      {/* Modal de Requests */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
@@ -90,16 +111,16 @@ export default function SuggestForm({ is_admin }) {
             boxShadow: 24,
             p: 4,
             width: 500,
-            maxHeight: '80vh', // limita altura total
+            maxHeight: '80vh',
             borderRadius: 2,
-            overflowY: 'auto', // ativa scroll se necessário
+            overflowY: 'auto',
           }}
         >
           <Typography variant="h6" gutterBottom>
             Solicitações Pendentes
           </Typography>
           <List>
-            {mockRequests.map((item) => (
+            {requests.map((item) => (
               <ListItem
                 key={item.id}
                 secondaryAction={
@@ -129,13 +150,27 @@ export default function SuggestForm({ is_admin }) {
                       rel="noopener noreferrer"
                       style={{ textDecoration: 'none', color: '#1976d2' }}
                     >
-                      {item.link}
+                      {item.link.length > 50 ? `${item.link.slice(0, 40)}...` : item.link}
                     </a>
                   }
                 />
               </ListItem>
             ))}
           </List>
+        {total > requests.length && (
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Button
+              onClick={handleVerMais}
+              startIcon={<ExpandMoreIcon />}
+              sx={{
+                color: 'gray',
+                textTransform: 'none',
+              }}
+            >
+              Ver mais
+            </Button>
+          </Box>
+        )}
         </Box>
       </Modal>
     </>

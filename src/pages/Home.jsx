@@ -1,28 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { Button, Container, Typography, Box } from '@mui/material';
 import MusicCard from '../components/MusicCard';
 import SuggestForm from '../components/SuggestForm';
 import AuthButtons from '../components/AuthButtons';
 import { getSongList } from '../services/api';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function Home() {
+  const [page, setPage] = useState();
+  const [total, setTotal] = useState();
   const [top5, setTop5] = useState([]);
   const islogged = () => {
-    return false;
     const cookies = document.cookie.split('; ');
     const cookie = cookies.find(c => c.startsWith('token='));
     return cookie ? cookie.split('=')[1] : null;
   };
   const isAdmin = () => {
-    return false;
     const cookies = document.cookie.split('; ');
     const cookie = cookies.find(c => c.startsWith('is_admin='));
     return cookie ? cookie.split('=')[1] === 'true' : false;
   };
+  
+  function handleVerMais() {
+    const newPage = page + 1;
+    getSongList(newPage).then((data) => {
+      setTop5(prev => [...prev, ...data.data]);
+      setPage(newPage);
+    });
+  }
 
   useEffect(() => {
-    getSongList().then(setTop5);
+    getSongList(1).then((data) => {
+      setTop5(data.data);
+      setPage(1);
+      setTotal(data.total);
+    });
   }, []);
 
   return (
@@ -34,7 +47,7 @@ export default function Home() {
           <Typography variant="h6">Tião Carreiro & Pardinho</Typography>
         </Box>
       </Box>
-      <Container class="container" maxWidth={false} >
+      <Container className="container" maxWidth={false} >
         {islogged() ? <SuggestForm is_admin={isAdmin()} data-testid="'suggest-form'" /> : <AuthButtons />}
         <Typography variant="h5" gutterBottom>Ranking Atual</Typography>
         {top5.length === 0 ? (
@@ -48,15 +61,30 @@ export default function Home() {
         ) : (
           top5.map((item, index) => (
             <MusicCard
+              id={item.id}
               key={item.youtube_id}
               rank={index + 1}
-              titulo={item.titulo}
-              views={item.visualizacoes}
+              title={item.title}
+              views={item.views}
               thumb={item.thumb}
               youtube_id={item.youtube_id}
               is_admin={isAdmin()}
             />
           ))
+        )}
+        {total > top5.length && (
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Button
+              onClick={handleVerMais}
+              startIcon={<ExpandMoreIcon />}
+              sx={{
+                color: 'gray',
+                textTransform: 'none',
+              }}
+            >
+              Ver mais
+            </Button>
+          </Box>
         )}
       </Container>
     </Container>
